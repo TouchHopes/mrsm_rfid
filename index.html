@@ -6,8 +6,6 @@
   <title>MRSM Bentong IoT</title>
   <link rel="icon" type="image/jpeg" href="https://upload.wikimedia.org/wikipedia/ms/3/3b/MRSM_Logo.jpg">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -348,410 +346,171 @@
    </div>
   </div>
   <script>
-    const defaultConfig = {
-      library_title: 'MRSM Bentong IoT',
-      subtitle: 'Smart Library Management System',
-      welcome_message: 'Scan your card to begin'
-    };
-
-    let config = { ...defaultConfig };
-    let records = [];
-    let filteredRecords = [];
-    let scannedBorrower = null;
-    let scannedBook = null;
-    let pendingConfirmCallback = null;
-
-    const sampleBorrowers = [
-      { id: 'MB2024001', name: 'Abdul Nagib', class: '5 Adil', rfid_uid: '04D5B94E9A3D21' },
-      { id: 'MB2024002', name: 'Nur Zafirah', class: '5 Bestari', rfid_uid: '04C2A54F7B1E08' },
-      { id: 'MB2024003', name: 'Siti Nurhaliza', class: '4 Cemerlang', rfid_uid: '04E1F2C3D4E5F6' }
-    ];
-
-    const sampleBooks = [
-      { isbn: '978-0-123456-78-9', title: 'Bahasa Melayu Sempurna', author: 'Dewan Bahasa dan Pustaka', rfid_uid: '04A1B2C3D4E5F6' },
-      { isbn: '978-0-987654-32-1', title: 'Physics: Fundamentals and Applications', author: 'Raymond A. Serway', rfid_uid: '04F6E5D4C3B2A1' },
-      { isbn: '978-0-111222-33-4', title: 'IoT Engineering: Design and Implementation', author: 'Salvatore Distefano', rfid_uid: '04D0E1F2A3B4C5' }
-    ];
-
-    const dataHandler = {
-      onDataChanged(data) {
-        records = data;
-        updateStats();
-        filterRecords();
-      }
-    };
-
-    async function initApp() {
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange: (cfg) => {
-            config = { ...defaultConfig, ...cfg };
-            applyConfig();
-          },
-          mapToCapabilities: () => ({
-            recolorables: [],
-            borderables: [],
-            fontEditable: undefined,
-            fontSizeable: undefined
-          }),
-          mapToEditPanelValues: (cfg) => new Map([
-            ['library_title', cfg.library_title || defaultConfig.library_title],
-            ['subtitle', cfg.subtitle || defaultConfig.subtitle],
-            ['welcome_message', cfg.welcome_message || defaultConfig.welcome_message]
-          ])
-        });
-      }
-
-      if (window.dataSdk) {
-        await window.dataSdk.init(dataHandler);
-      }
-
-      applyConfig();
-    }
-
-    function applyConfig() {
-      document.getElementById('library-title').textContent = config.library_title || defaultConfig.library_title;
-      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
-      document.getElementById('welcome-message').textContent = config.welcome_message || defaultConfig.welcome_message;
-    }
-
-    function switchTab(tab) {
-      const tabs = ['scan', 'manual', 'records'];
-      tabs.forEach(t => {
-        document.getElementById(`tab-${t}`).classList.remove('tab-active', 'text-white');
-        document.getElementById(`tab-${t}`).classList.add('text-slate-600');
-        document.getElementById(`section-${t}`).classList.add('hidden');
-      });
-
-      document.getElementById(`tab-${tab}`).classList.add('tab-active', 'text-white');
-      document.getElementById(`tab-${tab}`).classList.remove('text-slate-600');
-      document.getElementById(`section-${tab}`).classList.remove('hidden');
-    }
-
-    function simulateStudentScan() {
-      const borrower = sampleBorrowers[Math.floor(Math.random() * sampleBorrowers.length)];
-      scannedBorrower = borrower;
-      document.getElementById('scan-borrower-id').textContent = borrower.id;
-      document.getElementById('scan-borrower-name').textContent = borrower.name;
-      document.getElementById('scan-borrower-class').textContent = borrower.class;
-      document.getElementById('scan-borrower-uid').textContent = borrower.rfid_uid;
-      updateActionButtons();
-      showToast('Student card scanned successfully', 'success');
-    }
-
-    function simulateBookScan() {
-      const book = sampleBooks[Math.floor(Math.random() * sampleBooks.length)];
-      scannedBook = book;
-      document.getElementById('scan-book-isbn').textContent = book.isbn;
-      document.getElementById('scan-book-title').textContent = book.title;
-      document.getElementById('scan-book-author').textContent = book.author;
-      document.getElementById('scan-book-uid').textContent = book.rfid_uid;
-      updateActionButtons();
-      showToast('Book RFID scanned successfully', 'success');
-    }
-
-    function updateActionButtons() {
-      const canProcess = scannedBorrower && scannedBook;
-      document.getElementById('btn-loan').disabled = !canProcess;
-      document.getElementById('btn-return').disabled = !canProcess;
-    }
-
-    async function processLoan() {
-      if (!scannedBorrower || !scannedBook) {
-        showToast('Please scan both student card and book', 'error');
-        return;
-      }
-      if (records.length >= 999) {
-        showToast('Record limit reached (999)', 'error');
-        return;
-      }
-
-      const now = new Date();
-      const dueDate = new Date(now);
-      dueDate.setDate(dueDate.getDate() + 14);
-
-      const loanData = {
-        transaction_id: `TXN-${Date.now()}`,
-        transaction_type: 'LOAN',
-        book_isbn: scannedBook.isbn,
-        book_title: scannedBook.title,
-        book_author: scannedBook.author,
-        book_rfid_uid: scannedBook.rfid_uid,
-        borrower_id: scannedBorrower.id,
-        borrower_name: scannedBorrower.name,
-        borrower_class: scannedBorrower.class,
-        borrower_rfid_uid: scannedBorrower.rfid_uid,
-        transaction_timestamp: now.toISOString(),
-        due_date: dueDate.toISOString(),
-        return_timestamp: '',
-        transaction_status: 'ACTIVE'
-      };
-
-      showConfirmation(
-        'Confirm Loan Transaction',
-        `Loan "${scannedBook.title}" to ${scannedBorrower.name}?\nDue: ${dueDate.toISOString().split('T')[0]}`,
-        async () => {
-          if (!window.dataSdk) {
-            showToast('Data SDK not available', 'error');
-            return;
-          }
-          const result = await window.dataSdk.create(loanData);
-          if (result.isOk) {
-            showToast('Loan transaction created successfully', 'success');
-            clearScans();
-          } else {
-            showToast('Failed to create loan transaction', 'error');
-          }
-        }
-      );
-    }
-
-    async function processReturn() {
-      if (!scannedBorrower || !scannedBook) {
-        showToast('Please scan both student card and book', 'error');
-        return;
-      }
-
-      const activeLoan = records.find(r =>
-        r.book_rfid_uid === scannedBook.rfid_uid &&
-        r.borrower_rfid_uid === scannedBorrower.rfid_uid &&
-        r.transaction_status === 'ACTIVE'
-      );
-
-      if (!activeLoan) {
-        showToast('No active loan found for this book and student', 'error');
-        return;
-      }
-
-      const returnData = {
-        ...activeLoan,
-        transaction_status: 'RETURNED',
-        return_timestamp: new Date().toISOString()
-      };
-
-      showConfirmation(
-        'Confirm Return Transaction',
-        `Return "${scannedBook.title}" from ${scannedBorrower.name}?`,
-        async () => {
-          if (!window.dataSdk) {
-            showToast('Data SDK not available', 'error');
-            return;
-          }
-          const result = await window.dataSdk.update(returnData);
-          if (result.isOk) {
-            showToast('Return transaction created successfully', 'success');
-            clearScans();
-          } else {
-            showToast('Failed to process return transaction', 'error');
-          }
-        }
-      );
-    }
-
-    function clearScans() {
-      scannedBorrower = null;
-      scannedBook = null;
-      document.getElementById('scan-borrower-id').textContent = '—';
-      document.getElementById('scan-borrower-name').textContent = '—';
-      document.getElementById('scan-borrower-class').textContent = '—';
-      document.getElementById('scan-borrower-uid').textContent = '—';
-      document.getElementById('scan-book-isbn').textContent = '—';
-      document.getElementById('scan-book-title').textContent = '—';
-      document.getElementById('scan-book-author').textContent = '—';
-      document.getElementById('scan-book-uid').textContent = '—';
-      updateActionButtons();
-    }
-
-    async function handleManualSubmit(e) {
-      e.preventDefault();
-      if (records.length >= 999) {
-        showToast('Record limit reached', 'error');
-        return;
-      }
-
-      const formData = new FormData(e.target);
-      const type = formData.get('transaction_type');
-      const now = new Date();
-      const loanPeriod = parseInt(formData.get('loan_period')) || 14;
-      const dueDate = new Date(now);
-      dueDate.setDate(dueDate.getDate() + loanPeriod);
-
-      const transaction = {
-        transaction_id: `TXN-${Date.now()}`,
-        transaction_type: type,
-        book_isbn: formData.get('book_isbn'),
-        book_title: formData.get('book_title'),
-        book_author: formData.get('book_author'),
-        book_rfid_uid: formData.get('book_rfid_uid'),
-        borrower_id: formData.get('borrower_id'),
-        borrower_name: formData.get('borrower_name'),
-        borrower_class: formData.get('borrower_class'),
-        borrower_rfid_uid: formData.get('borrower_rfid_uid'),
-        transaction_timestamp: now.toISOString(),
-        due_date: type === 'RETURN' ? '' : dueDate.toISOString(),
-        return_timestamp: type === 'RETURN' ? now.toISOString() : '',
-        transaction_status: type === 'RETURN' ? 'RETURNED' : 'ACTIVE'
-      };
-
-      if (window.dataSdk) {
-        const result = await window.dataSdk.create(transaction);
-        if (result.isOk) {
-          showToast('Transaction recorded successfully', 'success');
-          e.target.reset();
-        } else {
-          showToast('Failed to record transaction', 'error');
-        }
-      }
-    }
-
-    function clearManualForm() {
-      document.getElementById('manual-form').reset();
-    }
-
-    function updateStats() {
-      const now = new Date();
-      let active = 0, overdue = 0, returned = 0;
-
-      records.forEach(r => {
-        if (r.transaction_status === 'RETURNED') {
-          returned++;
-        } else if (new Date(r.due_date) < now) {
-          overdue++;
-        } else {
-          active++;
-        }
-      });
-
-      document.getElementById('stat-total').textContent = records.length;
-      document.getElementById('stat-active').textContent = active;
-      document.getElementById('stat-overdue').textContent = overdue;
-      document.getElementById('stat-returned').textContent = returned;
-    }
-
-    function filterRecords() {
-      const search = document.getElementById('search-input').value.toLowerCase();
-      const statusFilter = document.getElementById('filter-status').value;
-      const now = new Date();
-
-      filteredRecords = records.filter(r => {
-        const matches = !search ||
-          r.book_isbn.toLowerCase().includes(search) ||
-          r.book_title.toLowerCase().includes(search) ||
-          r.borrower_id.toLowerCase().includes(search) ||
-          r.borrower_name.toLowerCase().includes(search);
-
-        let currentStatus = r.transaction_status;
-        if (r.transaction_status === 'ACTIVE' && new Date(r.due_date) < now) {
-          currentStatus = 'OVERDUE';
-        }
-        const statusMatches = !statusFilter || currentStatus === statusFilter;
-
-        return matches && statusMatches;
-      });
-
-      renderRecords();
-    }
-
-    function renderRecords() {
-      const tbody = document.getElementById('records-tbody');
-      const now = new Date();
-
-      if (filteredRecords.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400"><svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><p>No records found</p></td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = filteredRecords.map(r => {
-        let status = r.transaction_status;
-        let statusClass = 'status-active';
-        if (r.transaction_status === 'RETURNED') {
-          statusClass = 'status-returned';
-        } else if (new Date(r.due_date) < now) {
-          statusClass = 'status-overdue';
-          status = 'OVERDUE';
-        }
-
-        return `
-          <tr class="border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
-            <td class="px-6 py-4"><span class="font-mono text-sm font-medium text-slate-700">${r.transaction_id}</span></td>
-            <td class="px-6 py-4"><p class="font-mono text-sm text-slate-800">${r.book_isbn}</p><p class="text-xs text-slate-500">${r.book_title}</p></td>
-            <td class="px-6 py-4"><p class="font-medium text-slate-800">${r.borrower_id}</p><p class="text-xs text-slate-500">${r.borrower_name}</p></td>
-            <td class="px-6 py-4"><span class="font-mono text-sm text-slate-700">${r.transaction_timestamp.split('T')[0]}</span></td>
-            <td class="px-6 py-4"><span class="text-sm text-slate-700">${r.due_date ? r.due_date.split('T')[0] : '—'}</span></td>
-            <td class="px-6 py-4"><span class="${statusClass} inline-block px-3 py-1 bg-slate-100 rounded-lg text-xs font-semibold uppercase">${status}</span></td>
-            <td class="px-6 py-4">
-              ${r.transaction_status === 'ACTIVE' ? `<button onclick="markReturned('${r.__backendId}')" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Return</button>` : '—'}
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function markReturned(backendId) {
-      const record = records.find(r => r.__backendId === backendId);
-      if (!record) return;
-
-      const updated = {
-        ...record,
-        transaction_status: 'RETURNED',
-        return_timestamp: new Date().toISOString()
-      };
-
-      if (window.dataSdk) {
-        const result = await window.dataSdk.update(updated);
-        if (result.isOk) {
-          showToast('Return transaction created', 'success');
-        } else {
-          showToast('Failed to process return', 'error');
-        }
-      }
-    }
-
-    function showConfirmation(title, message, callback) {
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-message').textContent = message;
-      pendingConfirmCallback = callback;
-      document.getElementById('confirmation-modal').classList.remove('hidden');
-    }
-
-    function closeModal() {
-      document.getElementById('confirmation-modal').classList.add('hidden');
-      pendingConfirmCallback = null;
-    }
-
-    async function confirmAction() {
-      if (typeof pendingConfirmCallback === 'function') {
-        await pendingConfirmCallback();
-      }
-      closeModal();
-    }
-
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
-      const toastMessage = document.getElementById('toast-message');
-      const toastIcon = document.getElementById('toast-icon');
-
-      toastMessage.textContent = message;
-
-      if (type === 'success') {
-        toastIcon.className = 'w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center';
-        toastIcon.innerHTML = '<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
-      } else {
-        toastIcon.className = 'w-8 h-8 rounded-full bg-red-100 flex items-center justify-center';
-        toastIcon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
-      }
-
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-        toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 3000);
-    }
-
-    initApp();
+ const API_URL = "https://script.google.com/macros/s/AKfycbx3WyeT6YCBZXuemSfNzBuMQ0244_t2BBn2JHYsRaF3vKl-AyDxaxRJL6_vGlFxf-0k_w/exec";
+ 
+ let scannedStudentUID = "";
+ let scannedBookUID = "";
+ let records = [];
+ 
+ /* ==============================
+    GENERIC API CALL
+ ================================= */
+ async function callAPI(payload) {
+   try {
+     const res = await fetch(API_URL, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify(payload)
+     });
+ 
+     if (!res.ok) throw new Error("HTTP " + res.status);
+ 
+     return await res.json();
+   } catch (err) {
+     showToast("Server connection error", "error");
+     console.error(err);
+     return null;
+   }
+ }
+ 
+ /* ==============================
+    STUDENT SCAN
+ ================================= */
+ async function simulateStudentScan() {
+   const uid = prompt("Enter Student RFID UID (HEX)");
+   if (!uid) return;
+ 
+   scannedStudentUID = uid.toUpperCase();
+ 
+   const data = await callAPI({
+     student_uid: scannedStudentUID,
+     book_uid: ""
+   });
+ 
+   if (!data || data.status !== "success") {
+     showToast("Student not found", "error");
+     return;
+   }
+ 
+   document.getElementById("scan-borrower-id").textContent = data.borrower_id || "—";
+   document.getElementById("scan-borrower-name").textContent = data.borrower_name;
+   document.getElementById("scan-borrower-class").textContent = data.borrower_class;
+   document.getElementById("scan-borrower-uid").textContent = scannedStudentUID;
+ 
+   showToast("Student verified", "success");
+ }
+ 
+ /* ==============================
+    BOOK SCAN + PROCESS
+ ================================= */
+ async function simulateBookScan() {
+   if (!scannedStudentUID) {
+     showToast("Scan student first", "error");
+     return;
+   }
+ 
+   const uid = prompt("Enter Book RFID UID (HEX)");
+   if (!uid) return;
+ 
+   scannedBookUID = uid.toUpperCase();
+ 
+   const data = await callAPI({
+     student_uid: scannedStudentUID,
+     book_uid: scannedBookUID
+   });
+ 
+   if (!data || data.status !== "success") {
+     showToast("Book not found or error", "error");
+     return;
+   }
+ 
+   document.getElementById("scan-book-isbn").textContent = data.book_isbn || "—";
+   document.getElementById("scan-book-title").textContent = data.book_title;
+   document.getElementById("scan-book-author").textContent = data.book_author;
+   document.getElementById("scan-book-uid").textContent = scannedBookUID;
+ 
+   showToast("Transaction processed", "success");
+ 
+   loadRecords();
+ }
+ 
+ /* ==============================
+    LOAD RECORDS
+ ================================= */
+ async function loadRecords() {
+   const data = await callAPI({ action: "getRecords" });
+   if (!data || !data.records) return;
+ 
+   records = data.records;
+   renderRecords();
+ }
+ 
+ /* ==============================
+    RENDER RECORDS
+ ================================= */
+ function renderRecords() {
+   const tbody = document.getElementById("records-tbody");
+ 
+   if (!records.length) {
+     tbody.innerHTML = `<tr>
+       <td colspan="7" class="text-center py-6 text-slate-400">
+         No records found
+       </td>
+     </tr>`;
+     return;
+   }
+ 
+   tbody.innerHTML = records.map(r => `
+     <tr class="border-t">
+       <td class="px-4 py-3 font-mono text-xs">${r.transaction_id}</td>
+       <td class="px-4 py-3">${r.book_title}</td>
+       <td class="px-4 py-3">${r.borrower_name}</td>
+       <td class="px-4 py-3">${formatDate(r.transaction_timestamp)}</td>
+       <td class="px-4 py-3">${r.due_date ? formatDate(r.due_date) : "-"}</td>
+       <td class="px-4 py-3">${r.transaction_status}</td>
+       <td class="px-4 py-3">—</td>
+     </tr>
+   `).join("");
+ }
+ 
+ /* ==============================
+    UTIL
+ ================================= */
+ function formatDate(dateStr) {
+   if (!dateStr) return "-";
+   const d = new Date(dateStr);
+   return d.toLocaleDateString();
+ }
+ 
+ function showToast(message, type="success") {
+   const toast = document.getElementById("toast");
+   const msg = document.getElementById("toast-message");
+   const icon = document.getElementById("toast-icon");
+ 
+   msg.textContent = message;
+ 
+   if (type === "error") {
+     icon.className = "w-8 h-8 bg-red-100 rounded-full flex items-center justify-center";
+     icon.innerHTML = "✕";
+   } else {
+     icon.className = "w-8 h-8 bg-green-100 rounded-full flex items-center justify-center";
+     icon.innerHTML = "✓";
+   }
+ 
+   toast.classList.remove("translate-y-20","opacity-0");
+   toast.classList.add("translate-y-0","opacity-100");
+ 
+   setTimeout(()=>{
+     toast.classList.add("translate-y-20","opacity-0");
+   },3000);
+ }
+ 
+ /* ==============================
+    INIT
+ ================================= */
+ document.addEventListener("DOMContentLoaded", ()=>{
+   loadRecords();
+ });
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cedaa6926ff494c',t:'MTc3MTI1MTQxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
