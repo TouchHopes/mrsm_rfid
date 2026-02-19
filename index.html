@@ -461,15 +461,15 @@
    }
  
    tbody.innerHTML = records.map(r => `
-     <tr class="border-t">
-       <td class="px-4 py-3 font-mono text-xs">${r.transaction_id}</td>
-       <td class="px-4 py-3">${r.book_title}</td>
-       <td class="px-4 py-3">${r.borrower_name}</td>
-       <td class="px-4 py-3">${formatDate(r.transaction_timestamp)}</td>
-       <td class="px-4 py-3">${r.due_date ? formatDate(r.due_date) : "-"}</td>
-       <td class="px-4 py-3">${r.transaction_status}</td>
-       <td class="px-4 py-3">—</td>
-     </tr>
+    <tr class="border-t">
+      <td class="px-4 py-3 font-mono text-xs">${r.transaction_id || "-"}</td>
+      <td class="px-4 py-3">${r.book_title || "-"}</td>
+      <td class="px-4 py-3">${r.borrower_name || "-"}</td>
+      <td class="px-4 py-3">${formatDate(r.transaction_timestamp)}</td>
+      <td class="px-4 py-3">${r.due_date ? formatDate(r.due_date) : "-"}</td>
+      <td class="px-4 py-3">${r.transaction_status || "-"}</td>
+      <td class="px-4 py-3">—</td>
+    </tr>`).join("");
    `).join("");
  }
  
