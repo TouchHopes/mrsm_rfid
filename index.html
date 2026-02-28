@@ -449,18 +449,19 @@
     RENDER RECORDS
  ================================= */
  function renderRecords() {
-   const tbody = document.getElementById("records-tbody");
- 
-   if (!records.length) {
-     tbody.innerHTML = `<tr>
-       <td colspan="7" class="text-center py-6 text-slate-400">
-         No records found
-       </td>
-     </tr>`;
-     return;
-   }
- 
-   tbody.innerHTML = records.map(r => `
+  const tbody = document.getElementById("records-tbody");
+
+  if (!records.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-6 text-slate-400">
+          No records found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map(r => `
     <tr class="border-t">
       <td class="px-4 py-3 font-mono text-xs">${r.transaction_id || "-"}</td>
       <td class="px-4 py-3">${r.book_title || "-"}</td>
@@ -469,9 +470,9 @@
       <td class="px-4 py-3">${r.due_date ? formatDate(r.due_date) : "-"}</td>
       <td class="px-4 py-3">${r.transaction_status || "-"}</td>
       <td class="px-4 py-3">—</td>
-    </tr>`).join("");
-   `).join("");
- }
+    </tr>
+  `).join("");
+}
  
  /* ==============================
     UTIL
