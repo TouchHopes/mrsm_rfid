@@ -354,7 +354,7 @@
   /* ================================================
      CONFIG
   ================================================ */
-  const API_URL = "https://script.google.com/macros/s/AKfycbxT-Si8opEn9PWERMwo4spTNziVV2faCYcIrHODrIdWvszrm8qh1zGkXfrqW4RtkUOP7w/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwMA3R9BXf5NFbVqJ_bCXgf0kYKi2Drh-3HWLjZBgXhMkvr6uf62A_rtnygVOZ5r56EEQ/exec";
 
   /* How often to auto-refresh RFID_LOGS (ms) */
   const POLL_INTERVAL = 8000;
@@ -386,16 +386,59 @@
 
   /* ================================================
      GENERIC API CALL
+     Uses JSONP for GET (bypasses CORS completely)
+     Uses fetch POST for write actions
   ================================================ */
+  function callAPIGet(action) {
+    return new Promise((resolve) => {
+      const cbName = "cb_" + Date.now();
+      const script = document.createElement("script");
+
+      window[cbName] = (data) => {
+        resolve(data);
+        delete window[cbName];
+        document.body.removeChild(script);
+      };
+
+      script.onerror = () => {
+        resolve(null);
+        delete window[cbName];
+        try { document.body.removeChild(script); } catch(_) {}
+      };
+
+      script.src = API_URL + "?action=" + action + "&callback=" + cbName;
+      document.body.appendChild(script);
+
+      // Timeout fallback after 8s
+      setTimeout(() => {
+        if (window[cbName]) {
+          resolve(null);
+          delete window[cbName];
+          try { document.body.removeChild(script); } catch(_) {}
+        }
+      }, 8000);
+    });
+  }
+
   async function callAPI(payload) {
     try {
+      const readActions = ["getLatestLogs", "getRecords"];
+      if (readActions.includes(payload.action)) {
+        return await callAPIGet(payload.action);
+      }
+
+      // POST for write actions
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(payload),
+        redirect: "follow"
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.json();
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (_) { return { status: "error", raw: text }; }
+
     } catch (err) {
       console.error("API error:", err);
       return null;
