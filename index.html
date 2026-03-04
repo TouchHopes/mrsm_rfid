@@ -469,15 +469,12 @@
         }
       }
 
-      // Determine real status: if ACTIVE but past due date → OVERDUE
-      let status = (r.transaction_status || "").toUpperCase();
+      // Status already computed server-side; re-check overdue in case of clock drift
+      let status = (r.transaction_status || "ACTIVE").toUpperCase();
       if (status === "ACTIVE" && dueDate) {
         const due = new Date(dueDate);
         if (!isNaN(due) && due < new Date()) status = "OVERDUE";
       }
-      // Treat BOOK_SCAN / STUDENT_SCAN rows as ACTIVE loans
-      if (status === "BOOK_SCAN") status = "ACTIVE";
-      if (status === "STUDENT_SCAN") return ""; // skip student-only rows
 
       const statusClass = status === "ACTIVE"   ? "text-emerald-600 bg-emerald-50"
                         : status === "OVERDUE"  ? "text-red-600 bg-red-50"
