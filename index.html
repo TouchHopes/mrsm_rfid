@@ -80,10 +80,7 @@
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0115.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
        RFID Scan
       </button>
-      <button onclick="switchTab('manual')" id="tab-manual" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-       Manual Entry
-      </button>
+
       <button onclick="switchTab('records')" id="tab-records" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
        Records
@@ -177,92 +174,6 @@
       </div>
     </section>
 
-    <!-- ===================== MANUAL TAB ===================== -->
-    <section id="section-manual" class="max-w-2xl mx-auto hidden">
-     <div class="glass-card rounded-3xl p-8">
-      <div class="text-center mb-8">
-       <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-       </div>
-       <h2 class="text-xl font-bold text-slate-800">Manual Transaction Entry</h2>
-       <p class="text-slate-500 text-xs mt-1">Complete Transaction Data Entry Form</p>
-      </div>
-      <form id="manual-form" onsubmit="handleManualSubmit(event)" class="space-y-6">
-       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">📚 Book Information</label>
-        <div class="grid md:grid-cols-2 gap-4">
-         <div>
-          <label for="book-isbn" class="block text-sm font-medium text-slate-700 mb-2">ISBN</label>
-          <input type="text" id="book-isbn" name="book_isbn" placeholder="978-0-123456-78-9" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
-         </div>
-         <div>
-          <label for="book-title" class="block text-sm font-medium text-slate-700 mb-2">Book Title</label>
-          <input type="text" id="book-title" name="book_title" placeholder="Enter book title" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
-         </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4 mt-4">
-         <div>
-          <label for="book-author" class="block text-sm font-medium text-slate-700 mb-2">Author</label>
-          <input type="text" id="book-author" name="book_author" placeholder="Enter author name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
-         </div>
-         <div>
-          <label for="book-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">RFID UID (Hex)</label>
-          <input type="text" id="book-rfid-uid" name="book_rfid_uid" placeholder="E.g., 04D5B94E9A3D21" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
-         </div>
-        </div>
-       </div>
-       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">👤 Borrower Information</label>
-        <div class="grid md:grid-cols-2 gap-4">
-         <div>
-          <label for="borrower-id" class="block text-sm font-medium text-slate-700 mb-2">Maktab ID</label>
-          <input type="text" id="borrower-id" name="borrower_id" placeholder="MB2024001" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono">
-         </div>
-         <div>
-          <label for="borrower-name" class="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-          <input type="text" id="borrower-name" name="borrower_name" placeholder="Enter borrower name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
-         </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4 mt-4">
-         <div>
-          <label for="borrower-class" class="block text-sm font-medium text-slate-700 mb-2">Class</label>
-          <select id="borrower-class" name="borrower_class" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all">
-           <option value="">Select class</option>
-           <option>4 Adil</option><option>4 Bestari</option><option>4 Cemerlang</option>
-           <option>5 Adil</option><option>5 Bestari</option><option>5 Cemerlang</option>
-          </select>
-         </div>
-         <div>
-          <label for="borrower-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">Borrower RFID UID (Hex)</label>
-          <input type="text" id="borrower-rfid-uid" name="borrower_rfid_uid" placeholder="E.g., 04C2A54F7B1E08" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
-         </div>
-        </div>
-       </div>
-       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">📅 Transaction</label>
-        <div class="grid md:grid-cols-2 gap-4">
-         <div>
-          <label for="transaction-type" class="block text-sm font-medium text-slate-700 mb-2">Transaction Type</label>
-          <select id="transaction-type" name="transaction_type" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all">
-           <option value="">Select type</option>
-           <option value="LOAN">Loan (Checkout)</option>
-           <option value="RETURN">Return</option>
-           <option value="RENEWAL">Renewal</option>
-          </select>
-         </div>
-         <div>
-          <label for="loan-period" class="block text-sm font-medium text-slate-700 mb-2">Loan Period (days)</label>
-          <input type="number" id="loan-period" name="loan_period" placeholder="14" value="14" min="1" max="365" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
-         </div>
-        </div>
-       </div>
-       <div class="flex gap-3 pt-4">
-        <button type="submit" class="flex-1 btn-primary text-white py-4 rounded-xl font-medium text-sm">✓ Submit Transaction</button>
-        <button type="button" onclick="clearManualForm()" class="btn-secondary text-slate-600 px-6 py-4 rounded-xl font-medium text-sm">Clear</button>
-       </div>
-      </form>
-     </div>
-    </section>
 
     <!-- ===================== RECORDS TAB ===================== -->
     <section id="section-records" class="max-w-6xl mx-auto hidden">
@@ -297,8 +208,8 @@
        <table class="w-full">
         <thead><tr class="bg-slate-50/50">
          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction ID</th>
-         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Book (ISBN)</th>
-         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Maktab ID</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Book Title</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction Date</th>
          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Due Date</th>
          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
@@ -370,7 +281,7 @@
      TAB SWITCHING
   ================================================ */
   function switchTab(tab) {
-    ["scan","manual","records"].forEach(t => {
+    ["scan","records"].forEach(t => {
       document.getElementById("section-" + t).classList.toggle("hidden", t !== tab);
       const btn = document.getElementById("tab-" + t);
       if (t === tab) {
@@ -548,22 +459,66 @@
     }
 
     tbody.innerHTML = filtered.map(r => {
-      const statusClass = r.transaction_status === "ACTIVE" ? "text-emerald-600 bg-emerald-50"
-                        : r.transaction_status === "OVERDUE" ? "text-red-600 bg-red-50"
-                        : "text-slate-500 bg-slate-100";
+      // Compute due date as +14 days from transaction date if not provided
+      let dueDate = r.due_date;
+      if (!dueDate && r.transaction_timestamp) {
+        const d = new Date(r.transaction_timestamp);
+        if (!isNaN(d)) {
+          d.setDate(d.getDate() + 14);
+          dueDate = d.toISOString();
+        }
+      }
+
+      // Determine real status: if ACTIVE but past due date → OVERDUE
+      let status = (r.transaction_status || "").toUpperCase();
+      if (status === "ACTIVE" && dueDate) {
+        const due = new Date(dueDate);
+        if (!isNaN(due) && due < new Date()) status = "OVERDUE";
+      }
+      // Treat BOOK_SCAN / STUDENT_SCAN rows as ACTIVE loans
+      if (status === "BOOK_SCAN") status = "ACTIVE";
+      if (status === "STUDENT_SCAN") return ""; // skip student-only rows
+
+      const statusClass = status === "ACTIVE"   ? "text-emerald-600 bg-emerald-50"
+                        : status === "OVERDUE"  ? "text-red-600 bg-red-50"
+                        : status === "RETURNED" ? "text-slate-500 bg-slate-100"
+                        : "text-slate-400 bg-slate-50";
+
+      const statusIcon  = status === "ACTIVE"   ? "📚"
+                        : status === "OVERDUE"  ? "⚠️"
+                        : status === "RETURNED" ? "✅" : "•";
+
+      // Action button based on current status
+      const actionBtn = status === "ACTIVE" || status === "OVERDUE"
+        ? `<button onclick="markReturned('${r.transaction_id}')"
+             class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+             ↩ Return
+           </button>`
+        : `<span class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-50 text-slate-400">Returned</span>`;
+
       return `
         <tr class="border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
           <td class="px-6 py-4 font-mono text-xs text-slate-600">${r.transaction_id || "—"}</td>
-          <td class="px-6 py-4 text-sm text-slate-700">${r.book_title || r.book_isbn || "—"}</td>
-          <td class="px-6 py-4 text-sm text-slate-700">${r.borrower_name || r.borrower_id || "—"}</td>
+          <td class="px-6 py-4 text-sm text-slate-700 font-medium">${r.book_title || "—"}</td>
+          <td class="px-6 py-4 text-sm text-slate-700">${r.borrower_name || "—"}</td>
           <td class="px-6 py-4 text-sm text-slate-500">${formatDate(r.transaction_timestamp)}</td>
-          <td class="px-6 py-4 text-sm text-slate-500">${r.due_date ? formatDate(r.due_date) : "—"}</td>
+          <td class="px-6 py-4 text-sm ${status === "OVERDUE" ? "text-red-500 font-medium" : "text-slate-500"}">${formatDate(dueDate)}</td>
           <td class="px-6 py-4">
-            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${r.transaction_status || "—"}</span>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusIcon} ${status}</span>
           </td>
-          <td class="px-6 py-4 text-slate-400 text-sm">—</td>
+          <td class="px-6 py-4">${actionBtn}</td>
         </tr>`;
-    }).join("");
+    }).filter(Boolean).join("");
+  }
+
+  function markReturned(txnId) {
+    // Update locally immediately
+    const rec = records.find(r => r.transaction_id === txnId);
+    if (rec) rec.transaction_status = "RETURNED";
+    renderRecords();
+    updateStats();
+    showToast("Marked as returned", "success");
+    // TODO: persist to sheet via callAPI({ action: "markReturned", transaction_id: txnId })
   }
 
   function filterRecords() { renderRecords(); }
@@ -581,17 +536,7 @@
   function processLoan()   { showToast("Loan processing not implemented yet", "error"); }
   function processReturn() { showToast("Return processing not implemented yet", "error"); }
 
-  /* ================================================
-     MANUAL FORM
-  ================================================ */
-  function handleManualSubmit(e) {
-    e.preventDefault();
-    showToast("Manual entry submitted", "success");
-    clearManualForm();
-  }
-  function clearManualForm() {
-    document.getElementById("manual-form").reset();
-  }
+
 
   /* ================================================
      MODAL
