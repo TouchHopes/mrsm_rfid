@@ -8,153 +8,181 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { font-family: 'Outfit', sans-serif; }
-    .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); }
-    .scanner-ring { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    @keyframes pulse-ring { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+    .glass-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.5); }
+    .scanner-ring { animation: pulse-ring 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+    @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:.8;}50%{transform:scale(1.05);opacity:1;} }
     .scan-line { animation: scan 2s ease-in-out infinite; }
-    @keyframes scan { 0%, 100% { transform: translateY(-100%); } 50% { transform: translateY(100%); } }
+    @keyframes scan { 0%,100%{transform:translateY(-100%);}50%{transform:translateY(100%);} }
     .float-animation { animation: float 6s ease-in-out infinite; }
-    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-    input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3); }
+    @keyframes float { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
+    input:focus, select:focus { outline: none; box-shadow: 0 0 0 2px rgba(102,126,234,0.3); }
     .status-active { color: #10b981; }
     .status-overdue { color: #ef4444; }
     .status-returned { color: #6b7280; }
     .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
     .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: all 0.3s ease; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(102,126,234,0.3); }
     .btn-secondary { background: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
     .btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Live status badge */
+    .live-badge { display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #16a34a; border-radius: 9999px; padding: 2px 10px; font-size: 11px; font-weight: 600; }
+    .live-dot { width: 7px; height: 7px; background: #16a34a; border-radius: 50%; animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+
+    /* Shimmer for loading */
+    .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0%{background-position:200% 0;}100%{background-position:-200% 0;} }
+
+    /* Fade in when new data arrives */
+    .data-flash { animation: flash-green 0.6s ease; }
+    @keyframes flash-green { 0%{background:rgba(16,185,129,0.15);}100%{background:transparent;} }
+
+    .info-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 12px; }
+    .info-label { font-size: 11px; font-family: monospace; color: #94a3b8; }
+    .info-value { font-size: 13px; font-weight: 500; color: #334155; font-family: monospace; }
   </style>
-  <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full bg-gradient-to-br from-slate-50 via-white to-indigo-50 overflow-auto">
   <div id="app" class="min-h-full w-full flex flex-col">
+
+   <!-- Background blobs -->
    <div class="fixed inset-0 overflow-hidden pointer-events-none">
     <div class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100 rounded-full opacity-50 blur-3xl"></div>
     <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-100 rounded-full opacity-50 blur-3xl"></div>
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full opacity-30 blur-3xl"></div>
    </div>
+
    <div class="relative z-10 flex-1 p-4 md:p-8">
+
+    <!-- Header -->
     <header class="text-center mb-8">
      <div class="flex flex-col items-center gap-4 mb-6">
-      <img src="https://upload.wikimedia.org/wikipedia/ms/3/3b/MRSM_Logo.jpg" alt="MRSM Logo" class="w-20 h-20 object-contain" loading="lazy" onerror="console.error('Logo failed to load:', this.src); this.style.display='none';">
+      <img src="https://upload.wikimedia.org/wikipedia/ms/3/3b/MRSM_Logo.jpg" alt="MRSM Logo" class="w-20 h-20 object-contain" loading="lazy" onerror="this.style.display='none'">
       <div class="text-center">
-       <h1 id="library-title" class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">MRSM Bentong IoT</h1>
-       <p id="subtitle" class="text-slate-500 text-sm font-light tracking-wide mt-2">Smart Library Management System</p>
+       <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">MRSM Bentong IoT</h1>
+       <p class="text-slate-500 text-sm font-light tracking-wide mt-2">Smart Library Management System</p>
       </div>
      </div>
     </header>
+
+    <!-- Nav -->
     <nav class="flex justify-center mb-8">
      <div class="glass-card rounded-2xl p-1.5 flex gap-1">
       <button onclick="switchTab('scan')" id="tab-scan" class="tab-active px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0115.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-       </svg> RFID Scan </button><button onclick="switchTab('manual')" id="tab-manual" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-       </svg> Manual Entry </button><button onclick="switchTab('records')" id="tab-records" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-       </svg> Records </button>
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0115.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+       RFID Scan
+      </button>
+      <button onclick="switchTab('manual')" id="tab-manual" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+       Manual Entry
+      </button>
+      <button onclick="switchTab('records')" id="tab-records" class="px-6 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+       Records
+      </button>
      </div>
     </nav>
+
+    <!-- ===================== SCAN TAB ===================== -->
     <section id="section-scan" class="max-w-6xl mx-auto">
-     <div class="grid md:grid-cols-2 gap-6">
-      <div class="glass-card rounded-3xl p-6 float-animation" style="animation-delay: 0s;">
-       <div class="text-center mb-6">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 rounded-full mb-4">
-         <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div><span class="text-xs font-medium text-indigo-600">Student ID</span>
+
+      <!-- Live RFID Log Banner -->
+      <div class="glass-card rounded-2xl px-5 py-3 mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          <span class="text-sm font-medium text-slate-700">RFID_LOGS Feed</span>
+          <span class="text-xs text-slate-400" id="last-refresh-time">Refreshing…</span>
         </div>
-        <h3 class="text-lg font-semibold text-slate-800">Scan Student Card</h3>
-        <p id="welcome-message" class="text-slate-500 text-sm">Tap your card on the reader</p>
-       </div>
-       <div class="relative w-48 h-48 mx-auto mb-6">
-        <div class="absolute inset-0 rounded-full border-4 border-indigo-100 scanner-ring"></div>
-        <div class="absolute inset-3 rounded-full border-2 border-indigo-200 scanner-ring" style="animation-delay: 0.5s;"></div>
-        <div class="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
-         <svg class="w-16 h-16 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2" />
-         </svg>
-        </div>
-       </div>
-       <div class="space-y-3">
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">Maktab ID</span> <span id="scan-borrower-id" class="text-sm font-mono font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">Name</span> <span id="scan-borrower-name" class="text-sm font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">Class</span> <span id="scan-borrower-class" class="text-sm font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">RFID UID (HEX)</span> <span id="scan-borrower-uid" class="text-sm font-mono text-slate-700">—</span>
-        </div>
-       </div>
+        <button onclick="fetchLatestLogs(true)" class="text-xs text-indigo-600 font-medium hover:underline flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh
+        </button>
       </div>
-      <div class="glass-card rounded-3xl p-6 float-animation" style="animation-delay: 0.3s;">
-       <div class="text-center mb-6">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-50 rounded-full mb-4">
-         <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div><span class="text-xs font-medium text-purple-600">Book ISBN</span>
+
+      <!-- Scan cards -->
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Student Card -->
+        <div class="glass-card rounded-3xl p-6 float-animation" style="animation-delay:0s">
+          <div class="text-center mb-5">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 rounded-full mb-4">
+              <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+              <span class="text-xs font-medium text-indigo-600">Student ID · STUDENT_SCAN</span>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">Latest Student Scan</h3>
+            <p class="text-slate-500 text-sm">Auto-fetched from RFID_LOGS</p>
+          </div>
+          <div class="relative w-44 h-44 mx-auto mb-6">
+            <div class="absolute inset-0 rounded-full border-4 border-indigo-100 scanner-ring"></div>
+            <div class="absolute inset-3 rounded-full border-2 border-indigo-200 scanner-ring" style="animation-delay:.5s"></div>
+            <div class="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+              <svg class="w-14 h-14 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"/></svg>
+            </div>
+          </div>
+          <div class="space-y-2" id="student-info-block">
+            <div class="info-row"><span class="info-label">UID</span><span class="info-value" id="live-student-uid">—</span></div>
+            <div class="info-row"><span class="info-label">Student Name</span><span class="info-value" id="live-student-name">—</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-value" id="live-student-status">—</span></div>
+            <div class="info-row"><span class="info-label">Timestamp</span><span class="info-value text-xs" id="live-student-ts">—</span></div>
+          </div>
         </div>
-        <h3 class="text-lg font-semibold text-slate-800">Scan Book RFID</h3>
-        <p class="text-slate-500 text-sm">Place book on the scanner</p>
-       </div>
-       <div class="relative w-48 h-48 mx-auto mb-6">
-        <div class="absolute inset-0 rounded-3xl border-4 border-purple-100 scanner-ring"></div>
-        <div class="absolute inset-3 rounded-2xl border-2 border-purple-200 scanner-ring" style="animation-delay: 0.5s;"></div>
-        <div class="absolute inset-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center overflow-hidden">
-         <div class="absolute inset-0 bg-gradient-to-b from-purple-200/50 to-transparent h-1/2 scan-line"></div>
-         <svg class="w-16 h-16 text-purple-400 relative z-10" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-         </svg>
+
+        <!-- Book Card -->
+        <div class="glass-card rounded-3xl p-6 float-animation" style="animation-delay:.3s">
+          <div class="text-center mb-5">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-50 rounded-full mb-4">
+              <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+              <span class="text-xs font-medium text-purple-600">Book ISBN · BOOK_SCAN</span>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">Latest Book Scan</h3>
+            <p class="text-slate-500 text-sm">Auto-fetched from RFID_LOGS</p>
+          </div>
+          <div class="relative w-44 h-44 mx-auto mb-6">
+            <div class="absolute inset-0 rounded-3xl border-4 border-purple-100 scanner-ring"></div>
+            <div class="absolute inset-3 rounded-2xl border-2 border-purple-200 scanner-ring" style="animation-delay:.5s"></div>
+            <div class="absolute inset-6 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-b from-purple-200/50 to-transparent h-1/2 scan-line"></div>
+              <svg class="w-14 h-14 text-purple-400 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+          </div>
+          <div class="space-y-2" id="book-info-block">
+            <div class="info-row"><span class="info-label">UID</span><span class="info-value" id="live-book-uid">—</span></div>
+            <div class="info-row"><span class="info-label">Book Title</span><span class="info-value" id="live-book-title">—</span></div>
+            <div class="info-row"><span class="info-label">Details</span><span class="info-value" id="live-book-details">—</span></div>
+            <div class="info-row"><span class="info-label">Timestamp</span><span class="info-value text-xs" id="live-book-ts">—</span></div>
+          </div>
         </div>
-       </div>
-       <div class="space-y-3">
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">ISBN</span> <span id="scan-book-isbn" class="text-sm font-mono font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">Title</span> <span id="scan-book-title" class="text-sm font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">Author</span> <span id="scan-book-author" class="text-sm font-medium text-slate-700">—</span>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-         <span class="text-xs font-mono text-slate-500">RFID UID (HEX)</span> <span id="scan-book-uid" class="text-sm font-mono text-slate-700">—</span>
-        </div>
-       </div>
       </div>
-     </div>
-     <div class="grid md:grid-cols-2 gap-6 mt-6">
-      <button onclick="simulateStudentScan()" class="btn-primary text-white py-3 rounded-xl font-medium text-sm"> Simulate Card Scan </button> <button onclick="simulateBookScan()" class="btn-primary text-white py-3 rounded-xl font-medium text-sm"> Simulate Book Scan </button>
-     </div>
-     <div class="mt-6 glass-card rounded-3xl p-6">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-       <div>
-        <h3 class="font-semibold text-slate-800">Transaction Processing</h3>
-        <p class="text-sm text-slate-500">ISO 8601 timestamp format</p>
-       </div>
-       <div class="flex gap-3">
-        <button onclick="processLoan()" id="btn-loan" class="btn-primary text-white px-8 py-3 rounded-xl font-medium text-sm disabled:opacity-50" disabled> 📚 Create Loan </button> <button onclick="processReturn()" id="btn-return" class="btn-secondary text-slate-700 px-8 py-3 rounded-xl font-medium text-sm disabled:opacity-50" disabled> ↩️ Create Return </button>
-       </div>
+
+      <!-- Transaction processing -->
+      <div class="mt-6 glass-card rounded-3xl p-6">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="font-semibold text-slate-800">Transaction Processing</h3>
+            <p class="text-sm text-slate-500">ISO 8601 timestamp format</p>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="processLoan()" id="btn-loan" class="btn-primary text-white px-8 py-3 rounded-xl font-medium text-sm disabled:opacity-50" disabled>📚 Create Loan</button>
+            <button onclick="processReturn()" id="btn-return" class="btn-secondary text-slate-700 px-8 py-3 rounded-xl font-medium text-sm disabled:opacity-50" disabled>↩️ Create Return</button>
+          </div>
+        </div>
       </div>
-     </div>
     </section>
+
+    <!-- ===================== MANUAL TAB ===================== -->
     <section id="section-manual" class="max-w-2xl mx-auto hidden">
      <div class="glass-card rounded-3xl p-8">
       <div class="text-center mb-8">
        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
        </div>
        <h2 class="text-xl font-bold text-slate-800">Manual Transaction Entry</h2>
        <p class="text-slate-500 text-xs mt-1">Complete Transaction Data Entry Form</p>
@@ -164,18 +192,22 @@
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">📚 Book Information</label>
         <div class="grid md:grid-cols-2 gap-4">
          <div>
-          <label for="book-isbn" class="block text-sm font-medium text-slate-700 mb-2">ISBN (Format: XXX-X-XXXXXX-XX-X)</label> <input type="text" id="book-isbn" name="book_isbn" placeholder="978-0-123456-78-9" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
+          <label for="book-isbn" class="block text-sm font-medium text-slate-700 mb-2">ISBN</label>
+          <input type="text" id="book-isbn" name="book_isbn" placeholder="978-0-123456-78-9" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
          </div>
          <div>
-          <label for="book-title" class="block text-sm font-medium text-slate-700 mb-2">Book Title</label> <input type="text" id="book-title" name="book_title" placeholder="Enter book title" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
+          <label for="book-title" class="block text-sm font-medium text-slate-700 mb-2">Book Title</label>
+          <input type="text" id="book-title" name="book_title" placeholder="Enter book title" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
          </div>
         </div>
         <div class="grid md:grid-cols-2 gap-4 mt-4">
          <div>
-          <label for="book-author" class="block text-sm font-medium text-slate-700 mb-2">Author</label> <input type="text" id="book-author" name="book_author" placeholder="Enter author name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
+          <label for="book-author" class="block text-sm font-medium text-slate-700 mb-2">Author</label>
+          <input type="text" id="book-author" name="book_author" placeholder="Enter author name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
          </div>
          <div>
-          <label for="book-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">RFID UID (Hexadecimal Format)</label> <input type="text" id="book-rfid-uid" name="book_rfid_uid" placeholder="E.g., 04D5B94E9A3D21" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
+          <label for="book-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">RFID UID (Hex)</label>
+          <input type="text" id="book-rfid-uid" name="book_rfid_uid" placeholder="E.g., 04D5B94E9A3D21" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
          </div>
         </div>
        </div>
@@ -183,18 +215,26 @@
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">👤 Borrower Information</label>
         <div class="grid md:grid-cols-2 gap-4">
          <div>
-          <label for="borrower-id" class="block text-sm font-medium text-slate-700 mb-2">Maktab ID</label> <input type="text" id="borrower-id" name="borrower_id" placeholder="MB2024001" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono">
+          <label for="borrower-id" class="block text-sm font-medium text-slate-700 mb-2">Maktab ID</label>
+          <input type="text" id="borrower-id" name="borrower_id" placeholder="MB2024001" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono">
          </div>
          <div>
-          <label for="borrower-name" class="block text-sm font-medium text-slate-700 mb-2">Full Name</label> <input type="text" id="borrower-name" name="borrower_name" placeholder="Enter borrower name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
+          <label for="borrower-name" class="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+          <input type="text" id="borrower-name" name="borrower_name" placeholder="Enter borrower name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
          </div>
         </div>
         <div class="grid md:grid-cols-2 gap-4 mt-4">
          <div>
-          <label for="borrower-class" class="block text-sm font-medium text-slate-700 mb-2">Class</label> <select id="borrower-class" name="borrower_class" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all"> <option value="">Select class</option> <option value="4 Adil">4 Adil</option> <option value="4 Bestari">4 Bestari</option> <option value="4 Cemerlang">4 Cemerlang</option> <option value="5 Adil">5 Adil</option> <option value="5 Bestari">5 Bestari</option> <option value="5 Cemerlang">5 Cemerlang</option> </select>
+          <label for="borrower-class" class="block text-sm font-medium text-slate-700 mb-2">Class</label>
+          <select id="borrower-class" name="borrower_class" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all">
+           <option value="">Select class</option>
+           <option>4 Adil</option><option>4 Bestari</option><option>4 Cemerlang</option>
+           <option>5 Adil</option><option>5 Bestari</option><option>5 Cemerlang</option>
+          </select>
          </div>
          <div>
-          <label for="borrower-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">Borrower RFID UID (Hexadecimal)</label> <input type="text" id="borrower-rfid-uid" name="borrower_rfid_uid" placeholder="E.g., 04C2A54F7B1E08" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
+          <label for="borrower-rfid-uid" class="block text-sm font-medium text-slate-700 mb-2">Borrower RFID UID (Hex)</label>
+          <input type="text" id="borrower-rfid-uid" name="borrower_rfid_uid" placeholder="E.g., 04C2A54F7B1E08" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all font-mono text-sm">
          </div>
         </div>
        </div>
@@ -202,19 +242,29 @@
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">📅 Transaction</label>
         <div class="grid md:grid-cols-2 gap-4">
          <div>
-          <label for="transaction-type" class="block text-sm font-medium text-slate-700 mb-2">Transaction Type</label> <select id="transaction-type" name="transaction_type" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all"> <option value="">Select type</option> <option value="LOAN">Loan (Checkout)</option> <option value="RETURN">Return</option> <option value="RENEWAL">Renewal</option> </select>
+          <label for="transaction-type" class="block text-sm font-medium text-slate-700 mb-2">Transaction Type</label>
+          <select id="transaction-type" name="transaction_type" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 transition-all">
+           <option value="">Select type</option>
+           <option value="LOAN">Loan (Checkout)</option>
+           <option value="RETURN">Return</option>
+           <option value="RENEWAL">Renewal</option>
+          </select>
          </div>
          <div>
-          <label for="loan-period" class="block text-sm font-medium text-slate-700 mb-2">Loan Period (days)</label> <input type="number" id="loan-period" name="loan_period" placeholder="14" value="14" min="1" max="365" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
+          <label for="loan-period" class="block text-sm font-medium text-slate-700 mb-2">Loan Period (days)</label>
+          <input type="number" id="loan-period" name="loan_period" placeholder="14" value="14" min="1" max="365" required class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white/50 text-slate-800 placeholder-slate-400 transition-all">
          </div>
         </div>
        </div>
        <div class="flex gap-3 pt-4">
-        <button type="submit" class="flex-1 btn-primary text-white py-4 rounded-xl font-medium text-sm"> ✓ Submit Transaction </button> <button type="button" onclick="clearManualForm()" class="btn-secondary text-slate-600 px-6 py-4 rounded-xl font-medium text-sm"> Clear </button>
+        <button type="submit" class="flex-1 btn-primary text-white py-4 rounded-xl font-medium text-sm">✓ Submit Transaction</button>
+        <button type="button" onclick="clearManualForm()" class="btn-secondary text-slate-600 px-6 py-4 rounded-xl font-medium text-sm">Clear</button>
        </div>
       </form>
      </div>
     </section>
+
+    <!-- ===================== RECORDS TAB ===================== -->
     <section id="section-records" class="max-w-6xl mx-auto hidden">
      <div class="glass-card rounded-3xl p-6 mb-6">
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -225,292 +275,328 @@
        <div class="flex items-center gap-4">
         <div class="relative">
          <input type="text" id="search-input" oninput="filterRecords()" placeholder="Search records..." class="pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-white/50 text-sm text-slate-800 placeholder-slate-400 w-64">
-         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-         </svg>
-        </div><select id="filter-status" onchange="filterRecords()" class="px-4 py-2.5 border border-slate-200 rounded-xl bg-white/50 text-sm text-slate-700"> <option value="">All Status</option> <option value="ACTIVE">Active</option> <option value="OVERDUE">Overdue</option> <option value="RETURNED">Returned</option> </select>
+         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <select id="filter-status" onchange="filterRecords()" class="px-4 py-2.5 border border-slate-200 rounded-xl bg-white/50 text-sm text-slate-700">
+         <option value="">All Status</option>
+         <option value="ACTIVE">Active</option>
+         <option value="OVERDUE">Overdue</option>
+         <option value="RETURNED">Returned</option>
+        </select>
        </div>
       </div>
      </div>
      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="glass-card rounded-2xl p-4">
-       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-         <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-         </svg>
-        </div>
-        <div>
-         <p class="text-2xl font-bold text-slate-800" id="stat-total">0</p>
-         <p class="text-xs text-slate-500">Total Transactions</p>
-        </div>
-       </div>
-      </div>
-      <div class="glass-card rounded-2xl p-4">
-       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-         </svg>
-        </div>
-        <div>
-         <p class="text-2xl font-bold text-emerald-600" id="stat-active">0</p>
-         <p class="text-xs text-slate-500">Active Loans</p>
-        </div>
-       </div>
-      </div>
-      <div class="glass-card rounded-2xl p-4">
-       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-         </svg>
-        </div>
-        <div>
-         <p class="text-2xl font-bold text-red-600" id="stat-overdue">0</p>
-         <p class="text-xs text-slate-500">Overdue</p>
-        </div>
-       </div>
-      </div>
-      <div class="glass-card rounded-2xl p-4">
-       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
-         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-         </svg>
-        </div>
-        <div>
-         <p class="text-2xl font-bold text-slate-600" id="stat-returned">0</p>
-         <p class="text-xs text-slate-500">Returned</p>
-        </div>
-       </div>
-      </div>
+      <div class="glass-card rounded-2xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div><div><p class="text-2xl font-bold text-slate-800" id="stat-total">0</p><p class="text-xs text-slate-500">Total Transactions</p></div></div></div>
+      <div class="glass-card rounded-2xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-2xl font-bold text-emerald-600" id="stat-active">0</p><p class="text-xs text-slate-500">Active Loans</p></div></div></div>
+      <div class="glass-card rounded-2xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-2xl font-bold text-red-600" id="stat-overdue">0</p><p class="text-xs text-slate-500">Overdue</p></div></div></div>
+      <div class="glass-card rounded-2xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center"><svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div><div><p class="text-2xl font-bold text-slate-600" id="stat-returned">0</p><p class="text-xs text-slate-500">Returned</p></div></div></div>
      </div>
      <div class="glass-card rounded-3xl overflow-hidden">
       <div class="overflow-x-auto">
        <table class="w-full">
-        <thead>
-         <tr class="bg-slate-50/50">
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction ID</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Book (ISBN)</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Maktab ID</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction Date</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Due Date</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
-         </tr>
-        </thead>
+        <thead><tr class="bg-slate-50/50">
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction ID</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Book (ISBN)</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Maktab ID</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction Date</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Due Date</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+        </tr></thead>
         <tbody id="records-tbody">
-         <tr>
-          <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-           <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-           </svg><p>No records found</p><p class="text-sm">Start by creating a transaction</p></td>
-         </tr>
+         <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">
+          <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <p>No records found</p><p class="text-sm">Start by creating a transaction</p>
+         </td></tr>
         </tbody>
        </table>
       </div>
      </div>
     </section>
    </div>
+
+   <!-- Footer -->
    <footer class="relative z-10 border-t border-slate-200/30 bg-white/40 backdrop-blur-sm mt-8">
     <div class="max-w-6xl mx-auto px-4 md:px-8 py-6">
      <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
       <p class="text-sm text-slate-600">© 2024 MRSM Bentong Smart Library System</p>
       <div class="flex items-center gap-2 text-xs text-slate-500">
-       <svg class="w-3 h-3" fill="currentColor" viewbox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.5" />
-       </svg><span>ISO 2108 • ISO 8601 • ISO 20957 Compliance</span>
+       <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.5"/></svg>
+       <span>ISO 2108 • ISO 8601 • ISO 20957 Compliance</span>
       </div>
      </div>
     </div>
    </footer>
+
+   <!-- Toast -->
    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
     <div class="glass-card rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
-     <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-      <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-      </svg>
-     </div>
+     <div id="toast-icon" class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">✓</div>
      <p id="toast-message" class="font-medium text-slate-800">Success!</p>
     </div>
    </div>
+
+   <!-- Confirmation modal -->
    <div id="confirmation-modal" class="fixed inset-0 bg-black/30 hidden flex items-center justify-center z-50">
     <div class="glass-card rounded-3xl p-8 max-w-md mx-4">
      <h3 id="modal-title" class="text-xl font-bold text-slate-800 mb-3">Confirm Transaction</h3>
      <p id="modal-message" class="text-slate-600 mb-6"></p>
      <div class="flex gap-3">
-      <button onclick="closeModal()" class="flex-1 btn-secondary rounded-xl py-2">Cancel</button> <button onclick="confirmAction()" class="flex-1 btn-primary text-white rounded-xl py-2">Confirm</button>
+      <button onclick="closeModal()" class="flex-1 btn-secondary rounded-xl py-2">Cancel</button>
+      <button onclick="confirmAction()" class="flex-1 btn-primary text-white rounded-xl py-2">Confirm</button>
      </div>
     </div>
    </div>
   </div>
-  <script>
- const API_URL = "https://script.google.com/macros/s/AKfycbx3WyeT6YCBZXuemSfNzBuMQ0244_t2BBn2JHYsRaF3vKl-AyDxaxRJL6_vGlFxf-0k_w/exec";
- 
- let scannedStudentUID = "";
- let scannedBookUID = "";
- let records = [];
- 
- /* ==============================
-    GENERIC API CALL
- ================================= */
- async function callAPI(payload) {
-   try {
-     const res = await fetch(API_URL, {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify(payload)
-     });
- 
-     if (!res.ok) throw new Error("HTTP " + res.status);
- 
-     return await res.json();
-   } catch (err) {
-     showToast("Server connection error", "error");
-     console.error(err);
-     return null;
-   }
- }
- 
- /* ==============================
-    STUDENT SCAN
- ================================= */
- async function simulateStudentScan() {
-   const uid = prompt("Enter Student RFID UID (HEX)");
-   if (!uid) return;
- 
-   scannedStudentUID = uid.toUpperCase();
- 
-   const data = await callAPI({
-     student_uid: scannedStudentUID,
-     book_uid: ""
-   });
- 
-   if (!data || data.status !== "success") {
-     showToast("Student not found", "error");
-     return;
-   }
- 
-   document.getElementById("scan-borrower-id").textContent = data.borrower_id || "—";
-   document.getElementById("scan-borrower-name").textContent = data.borrower_name;
-   document.getElementById("scan-borrower-class").textContent = data.borrower_class;
-   document.getElementById("scan-borrower-uid").textContent = scannedStudentUID;
- 
-   showToast("Student verified", "success");
- }
- 
- /* ==============================
-    BOOK SCAN + PROCESS
- ================================= */
- async function simulateBookScan() {
-   if (!scannedStudentUID) {
-     showToast("Scan student first", "error");
-     return;
-   }
- 
-   const uid = prompt("Enter Book RFID UID (HEX)");
-   if (!uid) return;
- 
-   scannedBookUID = uid.toUpperCase();
- 
-   const data = await callAPI({
-     student_uid: scannedStudentUID,
-     book_uid: scannedBookUID
-   });
- 
-   if (!data || data.status !== "success") {
-     showToast("Book not found or error", "error");
-     return;
-   }
- 
-   document.getElementById("scan-book-isbn").textContent = data.book_isbn || "—";
-   document.getElementById("scan-book-title").textContent = data.book_title;
-   document.getElementById("scan-book-author").textContent = data.book_author;
-   document.getElementById("scan-book-uid").textContent = scannedBookUID;
- 
-   showToast("Transaction processed", "success");
- 
-   loadRecords();
- }
- 
- /* ==============================
-    LOAD RECORDS
- ================================= */
- async function loadRecords() {
-   const data = await callAPI({ action: "getRecords" });
-   if (!data || !data.records) return;
- 
-   records = data.records;
-   renderRecords();
- }
- 
- /* ==============================
-    RENDER RECORDS
- ================================= */
- function renderRecords() {
-  const tbody = document.getElementById("records-tbody");
 
-  if (!records.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="text-center py-6 text-slate-400">
-          No records found
-        </td>
-      </tr>`;
-    return;
+  <script>
+  /* ================================================
+     CONFIG
+  ================================================ */
+  const API_URL = "https://script.google.com/macros/s/AKfycbxT-Si8opEn9PWERMwo4spTNziVV2faCYcIrHODrIdWvszrm8qh1zGkXfrqW4RtkUOP7w/exec";
+
+  /* How often to auto-refresh RFID_LOGS (ms) */
+  const POLL_INTERVAL = 8000;
+
+  let records = [];
+  let pollTimer = null;
+
+  /* Tracks the last seen UIDs so we only flash on new data */
+  let lastStudentUID = null;
+  let lastBookUID    = null;
+
+  /* ================================================
+     TAB SWITCHING
+  ================================================ */
+  function switchTab(tab) {
+    ["scan","manual","records"].forEach(t => {
+      document.getElementById("section-" + t).classList.toggle("hidden", t !== tab);
+      const btn = document.getElementById("tab-" + t);
+      if (t === tab) {
+        btn.classList.add("tab-active");
+        btn.classList.remove("text-slate-600","hover:bg-slate-100");
+      } else {
+        btn.classList.remove("tab-active");
+        btn.classList.add("text-slate-600","hover:bg-slate-100");
+      }
+    });
+    if (tab === "records") loadRecords();
   }
 
-  tbody.innerHTML = records.map(r => `
-    <tr class="border-t">
-      <td class="px-4 py-3 font-mono text-xs">${r.transaction_id || "-"}</td>
-      <td class="px-4 py-3">${r.book_title || "-"}</td>
-      <td class="px-4 py-3">${r.borrower_name || "-"}</td>
-      <td class="px-4 py-3">${formatDate(r.transaction_timestamp)}</td>
-      <td class="px-4 py-3">${r.due_date ? formatDate(r.due_date) : "-"}</td>
-      <td class="px-4 py-3">${r.transaction_status || "-"}</td>
-      <td class="px-4 py-3">—</td>
-    </tr>
-  `).join("");
-}
- 
- /* ==============================
-    UTIL
- ================================= */
- function formatDate(dateStr) {
-   if (!dateStr) return "-";
-   const d = new Date(dateStr);
-   return d.toLocaleDateString();
- }
- 
- function showToast(message, type="success") {
-   const toast = document.getElementById("toast");
-   const msg = document.getElementById("toast-message");
-   const icon = document.getElementById("toast-icon");
- 
-   msg.textContent = message;
- 
-   if (type === "error") {
-     icon.className = "w-8 h-8 bg-red-100 rounded-full flex items-center justify-center";
-     icon.innerHTML = "✕";
-   } else {
-     icon.className = "w-8 h-8 bg-green-100 rounded-full flex items-center justify-center";
-     icon.innerHTML = "✓";
-   }
- 
-   toast.classList.remove("translate-y-20","opacity-0");
-   toast.classList.add("translate-y-0","opacity-100");
- 
-   setTimeout(()=>{
-     toast.classList.add("translate-y-20","opacity-0");
-   },3000);
- }
- 
- /* ==============================
-    INIT
- ================================= */
- document.addEventListener("DOMContentLoaded", ()=>{
-   loadRecords();
- });
+  /* ================================================
+     GENERIC API CALL
+  ================================================ */
+  async function callAPI(payload) {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err) {
+      console.error("API error:", err);
+      return null;
+    }
+  }
+
+  /* ================================================
+     FETCH LATEST RFID LOGS  ← NEW CORE FEATURE
+     Expects the Apps Script to return:
+     {
+       status: "success",
+       latestStudent: { uid, student_name, status, timestamp },
+       latestBook:    { uid, book_title, details, timestamp }
+     }
+     when called with { action: "getLatestLogs" }
+  ================================================ */
+  async function fetchLatestLogs(manual = false) {
+    const data = await callAPI({ action: "getLatestLogs" });
+
+    const timeEl = document.getElementById("last-refresh-time");
+    const now = new Date().toLocaleTimeString();
+
+    if (!data || data.status !== "success") {
+      if (manual) showToast("Could not fetch RFID logs", "error");
+      timeEl.textContent = "Last attempt: " + now;
+      return;
+    }
+
+    timeEl.textContent = "Updated: " + now;
+
+    /* ---- Student ---- */
+    const s = data.latestStudent;
+    if (s) {
+      const isNew = s.uid !== lastStudentUID;
+      lastStudentUID = s.uid;
+
+      setText("live-student-uid",    s.uid        || "—", isNew);
+      setText("live-student-name",   s.student_name || s.name || "—", isNew);
+      setText("live-student-status", s.status     || "—", isNew);
+      setText("live-student-ts",     s.timestamp  || "—", isNew);
+
+      if (isNew && manual) showToast("Student scan updated ✓", "success");
+    }
+
+    /* ---- Book ---- */
+    const b = data.latestBook;
+    if (b) {
+      const isNew = b.uid !== lastBookUID;
+      lastBookUID = b.uid;
+
+      setText("live-book-uid",     b.uid        || "—", isNew);
+      setText("live-book-title",   b.book_title || b.title || "—", isNew);
+      setText("live-book-details", b.details    || "—", isNew);
+      setText("live-book-ts",      b.timestamp  || "—", isNew);
+
+      if (isNew && manual) showToast("Book scan updated ✓", "success");
+    }
+  }
+
+  function setText(id, val, flash = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    if (flash) {
+      el.closest(".info-row").classList.remove("data-flash");
+      void el.closest(".info-row").offsetWidth; // reflow
+      el.closest(".info-row").classList.add("data-flash");
+    }
+  }
+
+  /* ================================================
+     START / STOP POLLING
+  ================================================ */
+  function startPolling() {
+    fetchLatestLogs(); // immediate first call
+    pollTimer = setInterval(() => fetchLatestLogs(), POLL_INTERVAL);
+  }
+
+  /* ================================================
+     LOAD RECORDS (for Records tab)
+  ================================================ */
+  async function loadRecords() {
+    const data = await callAPI({ action: "getRecords" });
+    if (!data || !data.records) return;
+    records = data.records;
+    renderRecords();
+    updateStats();
+  }
+
+  function renderRecords() {
+    const tbody = document.getElementById("records-tbody");
+    const search = (document.getElementById("search-input")?.value || "").toLowerCase();
+    const statusFilter = document.getElementById("filter-status")?.value || "";
+
+    const filtered = records.filter(r => {
+      const matchSearch = !search ||
+        (r.book_title || "").toLowerCase().includes(search) ||
+        (r.borrower_name || "").toLowerCase().includes(search) ||
+        (r.transaction_id || "").toLowerCase().includes(search);
+      const matchStatus = !statusFilter || r.transaction_status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No records found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+      const statusClass = r.transaction_status === "ACTIVE" ? "text-emerald-600 bg-emerald-50"
+                        : r.transaction_status === "OVERDUE" ? "text-red-600 bg-red-50"
+                        : "text-slate-500 bg-slate-100";
+      return `
+        <tr class="border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
+          <td class="px-6 py-4 font-mono text-xs text-slate-600">${r.transaction_id || "—"}</td>
+          <td class="px-6 py-4 text-sm text-slate-700">${r.book_title || r.book_isbn || "—"}</td>
+          <td class="px-6 py-4 text-sm text-slate-700">${r.borrower_name || r.borrower_id || "—"}</td>
+          <td class="px-6 py-4 text-sm text-slate-500">${formatDate(r.transaction_timestamp)}</td>
+          <td class="px-6 py-4 text-sm text-slate-500">${r.due_date ? formatDate(r.due_date) : "—"}</td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${r.transaction_status || "—"}</span>
+          </td>
+          <td class="px-6 py-4 text-slate-400 text-sm">—</td>
+        </tr>`;
+    }).join("");
+  }
+
+  function filterRecords() { renderRecords(); }
+
+  function updateStats() {
+    document.getElementById("stat-total").textContent    = records.length;
+    document.getElementById("stat-active").textContent   = records.filter(r => r.transaction_status === "ACTIVE").length;
+    document.getElementById("stat-overdue").textContent  = records.filter(r => r.transaction_status === "OVERDUE").length;
+    document.getElementById("stat-returned").textContent = records.filter(r => r.transaction_status === "RETURNED").length;
+  }
+
+  /* ================================================
+     TRANSACTION BUTTONS (stubs — wire to your logic)
+  ================================================ */
+  function processLoan()   { showToast("Loan processing not implemented yet", "error"); }
+  function processReturn() { showToast("Return processing not implemented yet", "error"); }
+
+  /* ================================================
+     MANUAL FORM
+  ================================================ */
+  function handleManualSubmit(e) {
+    e.preventDefault();
+    showToast("Manual entry submitted", "success");
+    clearManualForm();
+  }
+  function clearManualForm() {
+    document.getElementById("manual-form").reset();
+  }
+
+  /* ================================================
+     MODAL
+  ================================================ */
+  function closeModal() {
+    document.getElementById("confirmation-modal").classList.add("hidden");
+  }
+  function confirmAction() { closeModal(); }
+
+  /* ================================================
+     TOAST
+  ================================================ */
+  function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    const msg   = document.getElementById("toast-message");
+    const icon  = document.getElementById("toast-icon");
+
+    msg.textContent = message;
+    if (type === "error") {
+      icon.className = "w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600";
+      icon.textContent = "✕";
+    } else {
+      icon.className = "w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600";
+      icon.textContent = "✓";
+    }
+
+    toast.classList.remove("translate-y-20","opacity-0");
+    toast.classList.add("translate-y-0","opacity-100");
+    setTimeout(() => {
+      toast.classList.add("translate-y-20","opacity-0");
+      toast.classList.remove("translate-y-0","opacity-100");
+    }, 3000);
+  }
+
+  /* ================================================
+     UTIL
+  ================================================ */
+  function formatDate(dateStr) {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString();
+  }
+
+  /* ================================================
+     INIT
+  ================================================ */
+  document.addEventListener("DOMContentLoaded", () => {
+    startPolling();
+  });
   </script>
+ </body>
 </html>
